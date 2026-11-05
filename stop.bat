@@ -18,7 +18,7 @@ for /f "usebackq tokens=*" %%P in ("%TMP1%") do (
 )
 
 rem --- 2) sobras: node/cmd deste projeto rodando "astro dev" ou "pnpm dev" ---
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.Name -eq 'node.exe' -or $_.Name -eq 'cmd.exe') -and $_.CommandLine -match 'CANIRUN PAINEL API' -and $_.CommandLine -match 'astro|pnpm' } | ForEach-Object { $_.ProcessId }" > "%TMP1%" 2>nul
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.Name -eq 'node.exe' -or $_.Name -eq 'cmd.exe') -and $_.CommandLine -match 'dev\.log' } | ForEach-Object { $_.ProcessId }" > "%TMP1%" 2>nul
 for /f "usebackq tokens=*" %%P in ("%TMP1%") do (
   if not "%%P"=="" (
     echo   Encerrando processo - PID %%P
