@@ -1,0 +1,48 @@
+name: Sync upstream
+
+# Espelha midudev/canirun.ai no fork Naoriky-VFX/canirun.ai.
+# Só fast-forward: se o histórico divergir, falha em vez de forçar.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/midudev/canirun.ai.git
+          git fetch upstream main
+
+      - name: Fast-forward to upstream
+        run: |
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "Ja sincronizado com o upstream." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if ! git merge-base --is-ancestor HEAD upstream/main; then
+            echo "Historico divergiu do upstream. Merge manual necessario." >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Divergiu de midudev/canirun.ai. Resolva manualmente (sem force)."
+            exit 1
+          fi
+          git merge --ff-only upstream/main
+          git push origin HEAD:main
+          echo "Atualizado ate $(git rev-parse --short HEAD)." >> "$GITHUB_STEP_SUMMARY"
